@@ -8,4 +8,6 @@ public interface QuotationDao {
 
     Quotation get(int id) throws SQLException;
 
+    void changePrice(int id, int price);
+
 }

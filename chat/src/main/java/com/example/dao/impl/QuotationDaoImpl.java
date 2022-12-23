@@ -10,7 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class QuotationDaoImpl implements QuotationDao {
+            public class QuotationDaoImpl implements QuotationDao {
 
     private final Connection connection = PostgresConnectionUtil.getConnection();
 
@@ -35,6 +35,23 @@ public class QuotationDaoImpl implements QuotationDao {
             e.printStackTrace();
         }
         return quotation_from_db;
+    }
+
+    @Override
+    public void changePrice(int id, int price) {
+        String sql = """
+                update quotation
+                set price = ?
+                where id = ?
+                """;
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, price);
+            preparedStatement.setInt(2,  id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws SQLException {

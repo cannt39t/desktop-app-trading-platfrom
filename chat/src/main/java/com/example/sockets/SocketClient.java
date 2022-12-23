@@ -53,7 +53,7 @@ public class SocketClient extends Thread {
                 Message message = objectMapper.readValue(futureMessage, Message.class);
                 if (message.getType() == Type.UPDATE) {
                     System.out.println(message);
-                    Platform.runLater(() -> controller.setup());
+                    Platform.runLater(() -> controller.update());
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -5,6 +5,7 @@ import com.example.dao.impl.*;
 import com.example.models.*;
 import com.example.protocols.Message;
 import com.example.protocols.Type;
+import com.example.services.UserService;
 import com.example.sockets.SocketClient;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -26,9 +27,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class MainController implements Initializable {
+    final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
 
     private SocketClient socketClient;
-
     private ScheduledExecutorService service;
     public LineChart<String, Number> chart;
     public TableView<PriceToVolume> stockGlass;
@@ -56,7 +57,7 @@ public class MainController implements Initializable {
 
     StockGlassDao stockGlassDao = new StockGlassDaoImpl();
 
-    int userID = 1;
+    int userID = 2;
 
     QuotationDao quotationDao = new QuotationDaoImpl();
     PositionDao positionDao = new PositionDaoImpl();
@@ -66,6 +67,8 @@ public class MainController implements Initializable {
     UserDao userDao = new UserDaoImpl();
 
     private ObservableList<PriceToVolume> data = FXCollections.observableArrayList();
+
+    UserService userService = new UserService();
 
 
     @Override
@@ -85,6 +88,21 @@ public class MainController implements Initializable {
             setupUserPosition();
             setupBalanceLabel();
             setupButtons();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void update() {
+        try {
+            setupUserPosition();
+            Integer price = Integer.valueOf("" + (quotationDao.get(1).getPrice()));
+            Date now = new Date();
+            setupStockGlass();
+            setupBalanceLabel();
+            series.setName((String.valueOf(price)).concat("$"));
+            series.getData().remove(series.getData().size()-1);
+            series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), price));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -133,7 +151,6 @@ public class MainController implements Initializable {
         chart.getData().add(series);
 
         // this is used to display time in HH:mm:ss format
-        final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
 
         setupEmitation();
 
@@ -160,7 +177,6 @@ public class MainController implements Initializable {
         }, 0, 900, TimeUnit.SECONDS);
 
         Date now = new Date();
-        series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), price));
     }
 
     private void setupStockGlass() throws SQLException {
@@ -205,9 +221,9 @@ public class MainController implements Initializable {
                             setStyle("");
                         else {
                             try {
-                                if (Integer.parseInt(priceToVolume.getPrice()) < quotationDao.get(1).getPrice())
+                                if (Integer.parseInt(priceToVolume.getPrice()) > quotationDao.get(1).getPrice())
                                     setStyle("-fx-background-color: #ffd7d1;");
-                                else if (Integer.parseInt(priceToVolume.getPrice()) > quotationDao.get(1).getPrice())
+                                else if (Integer.parseInt(priceToVolume.getPrice()) < quotationDao.get(1).getPrice())
                                     setStyle("-fx-background-color: #baffba;");
                                 else
                                     setStyle("");
@@ -241,9 +257,9 @@ public class MainController implements Initializable {
                             setStyle("");
                         else {
                             try {
-                                if (Integer.parseInt(priceToVolume.getPrice()) < quotationDao.get(1).getPrice())
+                                if (Integer.parseInt(priceToVolume.getPrice()) > quotationDao.get(1).getPrice())
                                     setStyle("-fx-background-color: #ffd7d2;");
-                                else if (Integer.parseInt(priceToVolume.getPrice()) > quotationDao.get(1).getPrice())
+                                else if (Integer.parseInt(priceToVolume.getPrice()) < quotationDao.get(1).getPrice())
                                     setStyle("-fx-background-color: #baffba;");
                                 else
                                     setStyle("");
@@ -259,9 +275,12 @@ public class MainController implements Initializable {
 
     private void setupUserPosition() throws SQLException {
         GeneralPosition generalPosition = positionDao.getCurrentPosition(userID);
+        System.out.println(positionDao.getCurrentPosition(2));
 
         List<GeneralPosition> position = new ArrayList<>();
         position.add(generalPosition);
+
+        System.out.println(generalPosition);
 
 
         ObservableList<GeneralPosition> data =
@@ -269,7 +288,7 @@ public class MainController implements Initializable {
                         position
                 );
 
-        // data.forEach(System.out::println);
+        data.forEach(System.out::println);
 
         sideColumn.setCellValueFactory(new PropertyValueFactory<GeneralPosition, String>("side"));
         positionVolumeColumn.setCellValueFactory(new PropertyValueFactory<GeneralPosition, Integer>("avgVolume"));
@@ -284,9 +303,37 @@ public class MainController implements Initializable {
         now.setTime(now.getTime() - 2500000);
         final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
         for (int i = 0; i <= 9; i++) {
-            Integer random = Integer.valueOf("" + (int )(Math.random()*2000 + 2000));
             now.setTime(now.getTime() + 2500 * i);
-            series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), random));
+            if (i == 0) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3000));
+            }
+            if (i == 1) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3400));
+            }
+            if (i == 2) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3120));
+            }
+            if (i == 3) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3201));
+            }
+            if (i == 4) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3450));
+            }
+            if (i == 5) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 2900));
+            }
+            if (i == 6) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 4000));
+            }
+            if (i == 7) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3450));
+            }
+            if (i == 8) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3780));
+            }
+            if (i == 9) {
+                series.getData().add(new XYChart.Data<>(simpleDateFormat.format(now), 3600));
+            }
         }
     }
 
@@ -296,41 +343,46 @@ public class MainController implements Initializable {
     }
 
     private void clickOnBuyButton() throws SQLException {
+        User user = userDao.get(userID);
+        Message message = new Message();
+        message.setType(Type.UPDATE);
+        socketClient.sendMessage(message);
         if (limitCheckBox.isSelected()) {
             if (volumeTextField.getText() != null && enterPriceTextField.getText() != null) {
                 int volume = Integer.parseInt(volumeTextField.getText());
                 int enterPrice = Integer.parseInt(enterPriceTextField.getText());
-                LimitOrder limitOrder = new LimitOrder(1, "Buy", volume, enterPrice, userID, 1);
-                limitOrderDao.add(limitOrder);
+                if (volume * enterPrice < user.getBalance()) {
+                    LimitOrder limitOrder = new LimitOrder(1, "Buy", volume, enterPrice, userID, 1);
+                    limitOrderDao.add(limitOrder);
+                }
             }
         } else {
             if (volumeTextField.getText() != null) {
                 int volume = Integer.parseInt(volumeTextField.getText());
-                int price = Integer.parseInt("" + (quotationDao.get(1).getPrice()));
-                Position position = new Position(1, "Buy", volume, price, userID, 1, false);
-                positionDao.add(position);
+                userService.openPosition(user, "Buy", volume);
             }
         }
     }
 
     private void clickOnSellButton() throws SQLException {
+        User user = userDao.get(userID);
         Message message = new Message();
         message.setType(Type.UPDATE);
         socketClient.sendMessage(message);
-//        if (limitCheckBox.isSelected()) {
-//            if (volumeTextField.getText() != null && enterPriceTextField.getText() != null) {
-//                int volume = Integer.parseInt(volumeTextField.getText());
-//                int enterPrice = Integer.parseInt(enterPriceTextField.getText());
-//                LimitOrder limitOrder = new LimitOrder(1, "Sell", volume, enterPrice, userID, 1);
-//                limitOrderDao.add(limitOrder);
-//            }
-//        } else {
-//            if (volumeTextField.getText() != null) {
-//                int volume = Integer.parseInt(volumeTextField.getText());
-//                int price = Integer.parseInt("" + (quotationDao.get(1).getPrice()));
-//                Position position = new Position(1, "Sell", volume, price, userID, 1, false);
-//                positionDao.add(position);
-//            }
-//        }
+        if (limitCheckBox.isSelected()) {
+            if (volumeTextField.getText() != null && enterPriceTextField.getText() != null) {
+                int volume = Integer.parseInt(volumeTextField.getText());
+                int enterPrice = Integer.parseInt(enterPriceTextField.getText());
+                if (volume * enterPrice < user.getBalance()) {
+                    LimitOrder limitOrder = new LimitOrder(1, "Sell", volume, enterPrice, userID, 1);
+                    limitOrderDao.add(limitOrder);
+                }
+            }
+        } else {
+            if (volumeTextField.getText() != null) {
+                int volume = Integer.parseInt(volumeTextField.getText());
+                userService.openPosition(user, "Sell", volume);
+            }
+        }
     }
 }

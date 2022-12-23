@@ -10,4 +10,7 @@ public interface UserDao {
 
     void add(User user);
 
+
+    void updateBalance(int id, int balance);
+
 }

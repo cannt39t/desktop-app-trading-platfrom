@@ -50,6 +50,23 @@ public class UserDaoImpl implements UserDao {
         }
     }
 
+    @Override
+    public void updateBalance(int id, int balance) {
+        String sql = """
+                update users
+                set balance = ?
+                where id = ?
+                """;
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setInt(1, balance);
+            preparedStatement.setInt(2,  id);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         UserDaoImpl userDao = new UserDaoImpl();
         // userDao.add(new User(2,"whale2", 100));

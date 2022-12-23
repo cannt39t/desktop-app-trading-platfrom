@@ -61,7 +61,7 @@ public class PositionDaoImpl implements PositionDao {
                                      where user_id = ? and close_or_not = false
                                  )
                              
-                             select user_id as user_id, side as side, avg(position.volume) as avg_volume, avg(position.at_price) as avg_price, avg((round(((pnl.price::float - at_price.at_price::float) / pnl.price::float)::numeric, 2) + 1) * position.at_price * position.volume - position.at_price * position.volume) as pnl
+                             select user_id as user_id, side as side, sum(position.volume) as avg_volume, avg(position.at_price) as avg_price, sum((round(((pnl.price::float - at_price.at_price::float) / pnl.price::float)::numeric, 2) + 1) * position.at_price * position.volume - position.at_price * position.volume) as pnl
                              from pnl, at_price, volume, position
                              where user_id = ? and close_or_not = false
                              group by side, user_id
@@ -93,8 +93,8 @@ public class PositionDaoImpl implements PositionDao {
 
     @Override
     public void add(Position position) throws SQLException {
-        if (getCurrentPosition(position.getUserId()) != null && getCurrentPosition(position.getUserId()).getSide().equals(position.getSide())){
-            String sql = "INSERT INTO position (side, volume, at_price, user_id, quotation_id, close_or_not) VALUES (?::side, ?, ?, ?, ?, ?);";
+        String sql = "INSERT INTO position (side, volume, at_price, user_id, quotation_id, close_or_not) VALUES (?::side, ?, ?, ?, ?, ?);";
+        if (getCurrentPosition(position.getUserId()) == null){
             try {
                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
                 preparedStatement.setString(1, position.getSide());
@@ -107,6 +107,21 @@ public class PositionDaoImpl implements PositionDao {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        } else {
+            if (getCurrentPosition(position.getUserId()).getSide().equals(position.getSide())) {
+                try {
+                    PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                    preparedStatement.setString(1, position.getSide());
+                    preparedStatement.setInt(2,  position.getVolume());
+                    preparedStatement.setInt(3, position.getAtPrice());
+                    preparedStatement.setInt(4, position.getUserId());
+                    preparedStatement.setInt(5, position.getQuotationId());
+                    preparedStatement.setBoolean(6, position.isCloseOrNot());
+                    preparedStatement.executeUpdate();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
     @Override
@@ -117,7 +132,7 @@ public class PositionDaoImpl implements PositionDao {
     public static void main(String[] args) throws SQLException {
         PositionDao positionDao = new PositionDaoImpl();
         System.out.println(positionDao.getCurrentPosition(2));
-        positionDao.add(new Position(8,"Buy", 12, 3000, 2, 1, false));
-        System.out.println(positionDao.getCurrentPosition(2));
+//        positionDao.add(new Position(8,"Buy", 12, 3000, 2, 1, false));
+//        System.out.println(positionDao.getCurrentPosition(2));
     }
 }
